@@ -1,3 +1,4 @@
+[![Go](https://github.com/iwizard7/go_passgen/actions/workflows/go.yml/badge.svg)](https://github.com/iwizard7/go_passgen/actions/workflows/go.yml)
 # Password Generator 🔐
 
 This is a simple password generator web application written in Go. It allows users to generate random passwords with customizable length and character types.
