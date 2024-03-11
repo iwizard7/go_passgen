@@ -1,35 +1,45 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func generatePassword(length int) string {
+func generatePassword(length int, symbols string) string {
 	rand.Seed(time.Now().UnixNano())
 
-	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}|:<>?-=[];,."
-	password := make([]byte, length)
-	for i := range password {
-		password[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(password)
-}
+	var password strings.Builder
+	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" + symbols
 
-func passwordGeneratorHandler(w http.ResponseWriter, r *http.Request) {
-	length := 12 // Длина пароля по умолчанию
-	if len(r.URL.Query()["length"]) > 0 {
-		length = 12 // Можно задать длину пароля через параметр запроса в URL
+	for i := 0; i < length; i++ {
+		randomIndex := rand.Intn(len(chars))
+		password.WriteByte(chars[randomIndex])
 	}
 
-	password := generatePassword(length)
-	fmt.Fprintf(w, "Сгенерированный пароль: %s", password)
+	return password.String()
 }
 
 func main() {
-	http.HandleFunc("/generate-password", passwordGeneratorHandler)
-	fmt.Println("Сервер запущен на http://localhost:8080/generate-password")
-	http.ListenAndServe(":8080", nil)
+	r := gin.Default()
+
+	r.LoadHTMLGlob("templates/*")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{})
+	})
+
+	r.POST("/generate", func(c *gin.Context) {
+		length, _ := strconv.Atoi(c.PostForm("length"))
+		symbols := c.PostForm("symbols")
+
+		password := generatePassword(length, symbols)
+		c.JSON(http.StatusOK, gin.H{"password": password})
+	})
+
+	r.Run(":8080")
 }
